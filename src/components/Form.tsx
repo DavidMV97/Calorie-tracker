@@ -1,25 +1,48 @@
-import { useState, ChangeEvent } from 'react'
+import { useState, ChangeEvent, FormEvent, Dispatch } from 'react'
 import { categories } from '../data/categories'
+import { Activity } from '../types'
+import { ActivityActions } from '../reducers/activity-reducer'
 
-export default function Form() {
 
-    const [activity, setActivity] = useState({
+type FormProps = {
+    dispatch: Dispatch<ActivityActions>
+}
+
+
+export default function Form({dispatch} : FormProps) {
+
+    const [activity, setActivity] = useState<Activity>({
         category: 1,
         name: '',
         calories: 0
     })
 
     const handleChange = (e: ChangeEvent<HTMLSelectElement> | ChangeEvent<HTMLInputElement> ) => {
+        
+        const isNumberField = ['category', 'calories'].includes(e.target.id)
+        
         setActivity({
             ...activity,
-            [e.target.id]: e.target.value
+            [e.target.id]: isNumberField ? +e.target.value : e.target.value
         }) 
+    }
+
+    const isValidActivity = () => {
+        const {name, calories } = activity
+        console.log(name.trim() !== '' && calories >0);
+        return name.trim() !== '' && calories > 0
+    }
+
+    const handleSubmit = (e : FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        dispatch({type: 'save-activity', payload: {newActiviy: activity}})
     }
 
 
     return (
         <form
             className='space-y-5 bg-white shadow p-10 rounded-lg'
+            onSubmit={ handleSubmit }
         >
             <div className="grid grid-cols-1 gap-3">
                 <label htmlFor="category" className='font-bold'> Categoría: </label>
@@ -64,9 +87,10 @@ export default function Form() {
             </div>
 
             <input 
-                className='bg-gray-800 hover:bg-gray-900 w-full p-2 font-bold uppercase text-white cursor-pointer'
+                className='bg-gray-800 hover:bg-gray-900 w-full p-2  disabled:opacity-10 font-bold uppercase text-white cursor-pointer'
                 type="submit" 
-                value="Guardar Comida o Guardar Ejercicio" 
+                value={activity.category === 1 ? 'Guardar Comida' : 'Guardar Ejercicio'}
+                disabled={!isValidActivity()} 
             />
 
         </form>
